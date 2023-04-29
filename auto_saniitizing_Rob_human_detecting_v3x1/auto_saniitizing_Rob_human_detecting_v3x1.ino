@@ -1,0 +1,495 @@
+#include<NewPing.h>
+#include<Servo.h>
+
+#define light  18       //LED Front         pin A4 for Arduino Uno
+#define serv 19         //SERVO       pin A5 for Arduino Uno
+
+#define ENA_m1 5        // Enable/speed motor Front Right 
+#define ENB_m1 6        // Enable/speed motor Back Right
+#define ENA_m2 10       // Enable/speed motor Front Left
+#define ENB_m2 11       // Enable/speed motor Back Left
+
+#define IN_11  2        // L298N #1 in 1 motor Front Right
+#define IN_12  3        // L298N #1 in 2 motor Front Right
+#define IN_13  4        // L298N #1 in 3 motor Back Right
+#define IN_14  7        // L298N #1 in 4 motor Back Right
+
+#define IN_21  8        // L298N #2 in 1 motor Front Left
+#define IN_22  9        // L298N #2 in 2 motor Front Left
+#define IN_23  12       // L298N #2 in 3 motor Back Left
+#define IN_24  13       // L298N #2 in 4 motor Back Left
+
+#define RIGHT A0
+#define LEFT A1
+#define TRIGGER_PIN A2
+#define ECHO_PIN A3
+#define MAX_DISTANCE 100
+
+  
+// starting loaction
+const int startAngle = 90;
+
+// rotation limits
+const int minimumAngle = 6;
+const int maximumAngle = 175;
+
+// speed
+const int degreesPerCycle = 1;
+
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+
+Servo myservo;
+ 
+int pos =0;
+
+int command;            //Int to store app command state.
+int speedCar = 100;     // 50 - 255.
+int speed_Coeff = 4;
+boolean lightFront = false;
+
+
+int sweep();
+void SerialOutput(int,int);
+
+void setup() {  
+   
+    pinMode(light, OUTPUT);;
+    //pinMode(serv, OUTPUT);
+    
+    pinMode(ENA_m1, OUTPUT);
+    pinMode(ENB_m1, OUTPUT);
+    pinMode(ENA_m2, OUTPUT);
+    pinMode(ENB_m2, OUTPUT);
+  
+    pinMode(IN_11, OUTPUT);
+    pinMode(IN_12, OUTPUT);
+    pinMode(IN_13, OUTPUT);
+    pinMode(IN_14, OUTPUT);
+    
+    pinMode(IN_21, OUTPUT);
+    pinMode(IN_22, OUTPUT);
+    pinMode(IN_23, OUTPUT);
+    pinMode(IN_24, OUTPUT);
+
+    myservo.attach(serv);
+    
+    
+
+    
+{
+for(pos = 90; pos <= 180; pos += 1){
+  myservo.write(pos);
+  delay(15);
+} for(pos = 180; pos >= 0; pos-= 1) {
+  myservo.write(pos);
+  delay(15);
+}for(pos = 0; pos<=90; pos += 1) {
+  myservo.write(pos);
+  delay(15);
+}
+}
+pinMode(RIGHT, INPUT);
+pinMode(LEFT, INPUT);
+
+
+  Serial.begin(115200); 
+  Serial.println("A=Auto mode, F=Forward, B=Backward, L=Left, R=Right, I=Forward-Right, G=Forward-Left, J=Backward-Right, H=Backward-Left, S=Stop Robot, W=Light On, w=Light Off");
+
+  } 
+
+void goAhead(){ 
+  
+      Serial.println("Going Ahead.......");
+      digitalWrite(IN_11, HIGH);
+      digitalWrite(IN_12, LOW);
+      analogWrite(ENA_m1, speedCar);
+
+      digitalWrite(IN_13, LOW);
+      digitalWrite(IN_14, HIGH);
+      analogWrite(ENB_m1, speedCar);
+
+
+      digitalWrite(IN_21, LOW);
+      digitalWrite(IN_22, HIGH);
+      analogWrite(ENA_m2, speedCar);
+
+
+      digitalWrite(IN_23, HIGH);
+      digitalWrite(IN_24, LOW);
+      analogWrite(ENB_m2, speedCar);
+
+  }
+
+void goBack(){
+   
+      Serial.println("Going Back.......");
+      digitalWrite(IN_11, LOW);
+      digitalWrite(IN_12, HIGH);
+      analogWrite(ENA_m1, speedCar);
+
+
+      digitalWrite(IN_13, HIGH);
+      digitalWrite(IN_14, LOW);
+      analogWrite(ENB_m1, speedCar);
+
+
+      digitalWrite(IN_21, HIGH);
+      digitalWrite(IN_22, LOW);
+      analogWrite(ENA_m2, speedCar);
+
+
+      digitalWrite(IN_23, LOW);
+      digitalWrite(IN_24, HIGH);
+      analogWrite(ENB_m2, speedCar);
+
+  }
+
+void goRight(){ 
+  
+      Serial.println("Going Right.......");
+      digitalWrite(IN_11, LOW);
+      digitalWrite(IN_12, HIGH);
+      analogWrite(ENA_m1, speedCar);
+
+
+      digitalWrite(IN_13, HIGH);
+      digitalWrite(IN_14, LOW);
+      analogWrite(ENB_m1, speedCar);
+
+
+      digitalWrite(IN_21, LOW);
+      digitalWrite(IN_22, HIGH);
+      analogWrite(ENA_m2, speedCar);
+
+
+      digitalWrite(IN_23, HIGH);
+      digitalWrite(IN_24, LOW);
+      analogWrite(ENB_m2, speedCar);
+
+
+  }
+
+void goLeft(){
+  
+      Serial.println("Going Left.......");
+      digitalWrite(IN_11, HIGH);
+      digitalWrite(IN_12, LOW);
+      analogWrite(ENA_m1, speedCar);
+
+
+      digitalWrite(IN_13, LOW);
+      digitalWrite(IN_14, HIGH);
+      analogWrite(ENB_m1, speedCar);
+
+        
+      digitalWrite(IN_21, HIGH);
+      digitalWrite(IN_22, LOW);
+      analogWrite(ENA_m2, speedCar);
+
+
+      digitalWrite(IN_23, LOW);
+      digitalWrite(IN_24, HIGH);
+      analogWrite(ENB_m2, speedCar);
+
+        
+  }
+
+void goAheadRight(){
+
+      Serial.println("Going Ahead-Right.......");
+      digitalWrite(IN_11, HIGH);
+      digitalWrite(IN_12, LOW);
+      analogWrite(ENA_m1, speedCar/speed_Coeff);
+
+      digitalWrite(IN_13, LOW);
+      digitalWrite(IN_14, HIGH);
+      analogWrite(ENB_m1, speedCar/speed_Coeff);
+
+
+      digitalWrite(IN_21, LOW);
+      digitalWrite(IN_22, HIGH);
+      analogWrite(ENA_m2, speedCar);
+
+
+      digitalWrite(IN_23, HIGH);
+      digitalWrite(IN_24, LOW);
+      analogWrite(ENB_m2, speedCar);
+ 
+  }
+
+void goAheadLeft(){
+
+      Serial.println("Going Ahead-Left.......");
+      digitalWrite(IN_11, HIGH);
+      digitalWrite(IN_12, LOW);
+      analogWrite(ENA_m1, speedCar);
+
+      digitalWrite(IN_13, LOW);
+      digitalWrite(IN_14, HIGH);
+      analogWrite(ENB_m1, speedCar);
+
+
+      digitalWrite(IN_21, LOW);
+      digitalWrite(IN_22, HIGH);
+      analogWrite(ENA_m2, speedCar/speed_Coeff);
+
+
+      digitalWrite(IN_23, HIGH);
+      digitalWrite(IN_24, LOW);
+      analogWrite(ENB_m2, speedCar/speed_Coeff);
+ 
+  }
+
+void goBackRight(){ 
+  
+      Serial.println("Going Back-Right.......");
+      digitalWrite(IN_11, LOW);
+      digitalWrite(IN_12, HIGH);
+      analogWrite(ENA_m1, speedCar/speed_Coeff);
+
+
+      digitalWrite(IN_13, HIGH);
+      digitalWrite(IN_14, LOW);
+      analogWrite(ENB_m1, speedCar/speed_Coeff);
+
+
+      digitalWrite(IN_21, HIGH);
+      digitalWrite(IN_22, LOW);
+      analogWrite(ENA_m2, speedCar);
+
+
+      digitalWrite(IN_23, LOW);
+      digitalWrite(IN_24, HIGH);
+      analogWrite(ENB_m2, speedCar);
+
+  }
+
+void goBackLeft(){ 
+  
+      Serial.println("Back-Left.......");
+      digitalWrite(IN_11, LOW);
+      digitalWrite(IN_12, HIGH);
+      analogWrite(ENA_m1, speedCar);
+
+
+      digitalWrite(IN_13, HIGH);
+      digitalWrite(IN_14, LOW);
+      analogWrite(ENB_m1, speedCar);
+
+
+      digitalWrite(IN_21, HIGH);
+      digitalWrite(IN_22, LOW);
+      analogWrite(ENA_m2, speedCar/speed_Coeff);
+
+
+      digitalWrite(IN_23, LOW);
+      digitalWrite(IN_24, HIGH);
+      analogWrite(ENB_m2, speedCar/speed_Coeff);
+
+  }
+
+void stopRobot(){  
+
+      Serial.println("Robot Standby.......");
+      digitalWrite(IN_11, LOW);
+      digitalWrite(IN_12, LOW);
+      analogWrite(ENA_m1, speedCar);
+
+
+      digitalWrite(IN_13, LOW);
+      digitalWrite(IN_14, LOW);
+      analogWrite(ENB_m1, speedCar);
+
+  
+      digitalWrite(IN_21, LOW);
+      digitalWrite(IN_22, LOW);
+      analogWrite(ENA_m2, speedCar);
+
+      
+      digitalWrite(IN_23, LOW);
+      digitalWrite(IN_24, LOW);
+      analogWrite(ENB_m2, speedCar);
+  
+  }
+  
+void loop(){
+
+/*{
+for(pos = 90; pos <= 180; pos += 1){
+  myservo.write(pos);
+  delay(15);
+} for(pos = 180; pos >= 0; pos-= 1) {
+  myservo.write(pos);
+  delay(15);
+}for(pos = 0; pos<=90; pos += 1) {
+  myservo.write(pos);
+  delay(15);
+}
+}*/  
+//Serial.println("A=Auto mode, F=Forward, B=Backward, L=Left, R=Right, I=Forward-Right, G=Forward-Left, J=Backward-Right, H=Backward-Left, S=Stop Robot, W=Light On, w=Light Off");
+
+myservo.write(90);
+
+if(Serial.available()>0)
+{
+  command = Serial.read();
+if(command == 'A' )
+{
+while(1)
+{
+  
+     
+delay(200);
+unsigned int distance = sonar.ping_cm();
+Serial.println("distance Before Sweep");
+Serial.println(distance);
+int duration;
+int dex=sweep();
+ if(dex==200){
+      myservo.write(90);
+      break;
+      }
+
+Serial.println("Distance after sweep");
+Serial.println(distance);
+int Right_Value = digitalRead(RIGHT);
+int Left_Value = digitalRead(LEFT);
+if ((distance >= 0 && distance <= 15)||Left_Value==1||Right_Value==1){duration=50;}
+else if(distance >=16 && distance <=60){duration=5000;}
+else if(distance >=61 && distance <=100){duration=10000;}
+else if(distance >=101 && distance <=150){duration=15000;}
+else if(distance >150){duration=20000;}
+ 
+ if(dex>=75 && dex<=105){
+ Serial.println("Going Forward");
+ goAhead();
+ delay(duration);
+ stopRobot();
+ }
+ else if(dex>=60 && dex<75){
+  Serial.println("Going Forward Right");
+ goAheadRight();
+ delay(duration);
+ stopRobot();
+ }
+ else if(dex>=0 && dex<60){
+  Serial.println("Going Right");
+ goRight();
+ delay(2000);
+ goAhead();
+ delay(duration);
+ stopRobot();
+ }
+ else if(dex>105 && dex<=120){
+  Serial.println("Going Forward Left");
+ goAheadLeft();
+ delay(duration);
+ stopRobot();
+ }
+ else if(dex>120 && dex<180){
+  Serial.println("Going Left");
+ goLeft();
+ delay(2000);
+ goAhead();
+ delay(duration);
+ stopRobot();
+ }
+ distance = sonar.ping_cm();
+Serial.print("PROXIMITY RIGHT: ");
+Serial.println(Right_Value);
+Serial.print("PROXIMITY  LEFT: ");
+Serial.println(Left_Value);
+
+if((Right_Value==1) && (distance>=10 && distance<=30)&&(Left_Value==1)){
+  goAhead();
+}else if((Right_Value==0) && (Left_Value==1)) {
+  goLeft();
+}else if((Right_Value==1)&&(Left_Value==0)) {
+  goRight();
+}else if((Right_Value==1)&&(Left_Value==1)) {
+  stopRobot();
+  delay(1000);
+  goBack();
+  delay(1000);
+  stopRobot();
+  delay(5000);
+  
+}else if(distance > 1 && distance < 15) {
+  stopRobot();
+  }
+  distance = sonar.ping_cm();
+  if(distance>0 && distance<10){
+    goBack();
+    delay(1000);
+    stopRobot();
+  }
+}
+}   
+else if (command=='F'||command=='B'||command=='L'||command=='R'||command=='I'||command=='G'||command=='J'||command=='H'||command=='S'||command=='W'||command=='w') {
+  /*command = Serial.read();*/
+  
+if (lightFront) {digitalWrite(light, HIGH);}
+if (!lightFront) {digitalWrite(light, LOW);}
+
+
+switch (command) {
+case 'F':goAhead();break;
+case 'B':goBack();break;
+case 'L':goLeft();break;
+case 'R':goRight();break;
+case 'I':goAheadRight();break;
+case 'G':goAheadLeft();break;
+case 'J':goBackRight();break;
+case 'H':goBackLeft();break;
+
+case 'S':stopRobot();break;
+case 'W':lightFront = true;break;
+case 'w':lightFront = false;break;
+
+
+}
+}
+//else{stopRobot();}
+}
+}
+int sweep()
+{
+    static int currentAngle = startAngle;
+    static int motorRotateAmount = degreesPerCycle;
+    while(1)
+    {
+      command=Serial.read();
+    if(command=='s'){
+      myservo.write(90);
+      currentAngle=200;
+      break;
+      }
+    unsigned int dist = sonar.ping_cm();
+
+    // move servo
+    myservo.write(currentAngle);
+    delay(10);
+    // calculate the distance from the sensor, and write the value with location to serial
+    SerialOutput(currentAngle,dist);
+    
+    
+    // update motor location
+    currentAngle += motorRotateAmount;
+
+    // if the motor has reached the limits, change direction
+    if(currentAngle <= minimumAngle || currentAngle >= maximumAngle) 
+    {
+        motorRotateAmount = -motorRotateAmount;
+    }
+    if(dist>10 && dist<=30){
+    break;
+    }
+    }
+    return currentAngle;
+    currentAngle=0;
+}
+void SerialOutput(const int angle, const int distance)
+{
+    // convert the angle and distance to a string and serial print
+    Serial.println(String(angle) + "," + String(distance));
+}
